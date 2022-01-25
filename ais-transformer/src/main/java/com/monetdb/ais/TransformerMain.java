@@ -30,7 +30,7 @@ public class TransformerMain {
                 String host = hostOption != null ? hostOption : "localhost";
                 String topic = topicOption != null ? topicOption : "test";
                 int port = portOption != null ? Integer.parseInt(portOption) : 9092;
-                int interval = intervalOption != null ? Integer.parseInt(intervalOption) : 10;
+                double interval = intervalOption != null ? Double.parseDouble(intervalOption) : 10;
 
                 useKafka(host, port, topic, interval);
             }
@@ -45,8 +45,18 @@ public class TransformerMain {
 
     }
 
-    public static void useKafka(String host, int port, String topic, int interval) {
-        System.out.println(String.format("using kafka with settings: %s:%d, topic: %s, interval %d", host, port, topic, interval));
+    public static void useKafka(String host, int port, String topic, double interval) {
+        KafkaToMonetDB kafka = new KafkaToMonetDB(host, port, topic);
+        
+        while(true) {
+            try {
+                Thread.sleep((long)(interval * 1000));
+                kafka.getMessagesFromKafka();
+            }catch(InterruptedException e ) {
+                System.out.println("Caught exception: " + e.getLocalizedMessage());
+                System.exit(0);
+            }
+        }
     }
 
     public static void useFiles(String[] args, Parser parser) {
