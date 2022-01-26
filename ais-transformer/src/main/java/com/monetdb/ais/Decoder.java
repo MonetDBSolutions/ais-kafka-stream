@@ -75,6 +75,58 @@ class Decoder {
         return messages;
     }
 
+    public static List<AisMessage> decodeSingleMessage(List<String> splitted) {
+        List<AisMessage> messages = new ArrayList<>();
+        List<Tuple> toBeDecoded = new ArrayList<>();
+
+        for(String _split : splitted) {
+            Vdm vdm = new Vdm();
+
+            // Some messages can be in a different form:
+            // 1471629655.294269 !AIVDM,1,1,,A,13aN2h0P00P@ojTMLSkMU?wl2D2T9HW>`<,0*21
+            Character prefix = _split.toCharArray()[0];
+            if(prefix == '$') {
+                prefix = '!';
+            }
+            if( prefix != '!') {
+                String[] arr = _split.split(" ");
+                _split = arr[1];
+            }
+
+            String[] splitMsg = _split.split(",");
+            int fragments = Integer.parseInt(splitMsg[1]);
+            int fragmentNumber = Integer.parseInt(splitMsg[2]);
+            int fragmentId = -1;
+
+            if(fragments > 1 && !splitMsg[3].isEmpty()) {
+                fragmentId  = Integer.parseInt(splitMsg[3]);
+                toBeDecoded.add(new Tuple(fragmentId, fragmentNumber, fragments, _split));
+                continue;
+            }
+
+            if(fragments == fragmentNumber) {
+                AisMessage tmp = decodeMessage(_split, vdm);
+
+                if(tmp != null) {
+                    messages.add(tmp);
+                }
+            }
+            
+        }
+
+        if(!toBeDecoded.isEmpty()) {
+            List<AisMessage> pair = parseLeftovers(toBeDecoded);
+            List<AisMessage> leftovers = pair;
+
+            if(leftovers.size() > 0) {
+                messages.addAll(leftovers);
+            }
+        }
+
+        return messages;
+    }
+
+
     /**
      * Parse the leftovers into a list of AisMessages
      * @param leftovers (A list of Tuple's)

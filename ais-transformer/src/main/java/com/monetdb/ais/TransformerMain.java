@@ -13,7 +13,7 @@ import org.apache.commons.cli.ParseException;
 
 public class TransformerMain {
     public static void main( String args[] ) {
-        Parser parser = new Parser();
+        Decoder decoder = new Decoder();
 
         Options opts = createOptions();
         CommandLineParser cmdParser = new DefaultParser();
@@ -45,13 +45,19 @@ public class TransformerMain {
 
     }
 
-    public static void useKafka(String host, int port, String topic, double interval) {
+    public static void useKafka(String host, int port, String topic, double interval ) {
         KafkaToMonetDB kafka = new KafkaToMonetDB(host, port, topic);
         
         while(true) {
             try {
                 Thread.sleep((long)(interval * 1000));
-                kafka.getMessagesFromKafka();
+                List<String> kafkaValues = kafka.getMessagesFromKafka();
+                if(kafkaValues.size() <= 0) {
+                    continue;
+                }
+
+                List<AisMessage> msgs = Decoder.decodeSingleMessage(kafkaValues);
+
             }catch(InterruptedException e ) {
                 System.out.println("Caught exception: " + e.getLocalizedMessage());
                 System.exit(0);

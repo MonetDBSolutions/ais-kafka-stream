@@ -31,6 +31,14 @@ fn main() {
             Err(e) => println!("{}", e)
         }
         
+        // 
+        // TODO: figure out if the parsing should be done here or in the decoder
+        //
+        if !buffer.starts_with('!') {
+            let split = buffer.split_inclusive('!').collect::<Vec<&str>>();
+            buffer = format!("!{}", split[1]);
+        }
+
         producer.send(&Record::from_value(&args.topic, buffer.as_bytes())).unwrap();
 
         if !args.silent {
