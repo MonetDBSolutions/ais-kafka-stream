@@ -6,10 +6,11 @@ Java program that can decode raw AIS messages
 This program can decode raw AIS messages either from (a) file(s) or from a kafka cluster.
 
 ## Flags
-| Flag (long) | Short | Needs Value?                            | Command   |
-|-------------|-------|-----------------------------------------|-----------|
-| Kafka       | k     | No                                      | Use kafka |
-| Files       | f     | Yes (comma seperated list of filenames) | Use files |
+| Flag (long)  | Short | Needs Value?                            | Command                                  |
+|--------------|-------|-----------------------------------------|------------------------------------------|
+| kafka        | k     | No                                      | Use Kafka                                |
+| files        | f     | Yes (comma seperated list of filenames) | Use files                                |
+| output-files | o     | Yes                                     | Path to where the csv's should be stored |
 
 The following flags are mutually exclusive and are ignored by the other setting:
 

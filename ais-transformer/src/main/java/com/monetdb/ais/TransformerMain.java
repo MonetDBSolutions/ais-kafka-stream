@@ -43,7 +43,7 @@ public class TransformerMain {
 
     }
 
-    public static void useKafka(String host, int port, String topic, double interval ) {
+    public static void useKafka(String host, int port, String topic, double interval) {
         KafkaToMonetDB kafka = new KafkaToMonetDB(host, port, topic);
         
         while(true) {
@@ -91,6 +91,7 @@ public class TransformerMain {
         // The bool in this function indicates this option should have a value after it.
         options.addOption(new Option("k", "kafka", false, "Read from Kafka cluster"));
         options.addOption(new Option("f", "files", true, "Read from files"));
+        options.addOption(new Option("o", "output-path", true, "The path the output csv's need to be written to"));
 
         options.addOption(new Option("h", "host", true, "Kafka hostname"));
         options.addOption(new Option("p", "port", true, "Kafka hostname port"));
