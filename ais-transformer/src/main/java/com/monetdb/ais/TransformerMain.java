@@ -13,8 +13,6 @@ import org.apache.commons.cli.ParseException;
 
 public class TransformerMain {
     public static void main( String args[] ) {
-        Decoder decoder = new Decoder();
-
         Options opts = createOptions();
         CommandLineParser cmdParser = new DefaultParser();
 
@@ -35,7 +33,7 @@ public class TransformerMain {
                 useKafka(host, port, topic, interval);
             }
             else if(line.hasOption("files")) {
-                System.out.println("writing to file");
+                System.out.println("reading from file");
             }
 
         }catch(ParseException e ) {
@@ -51,12 +49,21 @@ public class TransformerMain {
         while(true) {
             try {
                 Thread.sleep((long)(interval * 1000));
+
+                List<AisMessage> msgs = new ArrayList<AisMessage>();
+
                 List<String> kafkaValues = kafka.getMessagesFromKafka();
                 if(kafkaValues.size() <= 0) {
                     continue;
                 }
 
-                List<AisMessage> msgs = Decoder.decodeSingleMessage(kafkaValues);
+                for(String value : kafkaValues) {
+                    Tuple msgTuple = Decoder.decodeSingleMessage(value);
+
+                    if(msgTuple.isMessageSet()) {
+                        msgs.add(msgTuple.message);
+                    }
+                }
 
             }catch(InterruptedException e ) {
                 System.out.println("Caught exception: " + e.getLocalizedMessage());
@@ -83,7 +90,7 @@ public class TransformerMain {
 
         // The bool in this function indicates this option should have a value after it.
         options.addOption(new Option("k", "kafka", false, "Read from Kafka cluster"));
-        options.addOption(new Option("f", "files", true, "Write output to files"));
+        options.addOption(new Option("f", "files", true, "Read from files"));
 
         options.addOption(new Option("h", "host", true, "Kafka hostname"));
         options.addOption(new Option("p", "port", true, "Kafka hostname port"));

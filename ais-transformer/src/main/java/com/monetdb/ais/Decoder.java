@@ -29,38 +29,14 @@ class Decoder {
         String[] splitted = codedMessage.strip().split("\n");
 
         for(String _split : splitted) {
-            Vdm vdm = new Vdm();
+            Tuple msgTuple = decodeSingleMessage(_split);
 
-            // Some messages can be in a different form:
-            // 1471629655.294269 !AIVDM,1,1,,A,13aN2h0P00P@ojTMLSkMU?wl2D2T9HW>`<,0*21
-            Character prefix = _split.toCharArray()[0];
-            if(prefix == '$') {
-                prefix = '!';
-            }
-            if( prefix != '!') {
-                String[] arr = _split.split(" ");
-                _split = arr[1];
-            }
-
-            String[] splitMsg = _split.split(",");
-            int fragments = Integer.parseInt(splitMsg[1]);
-            int fragmentNumber = Integer.parseInt(splitMsg[2]);
-            int fragmentId = -1;
-
-            if(fragments > 1 && !splitMsg[3].isEmpty()) {
-                fragmentId  = Integer.parseInt(splitMsg[3]);
-                toBeDecoded.add(new Tuple(fragmentId, fragmentNumber, fragments, _split));
+            if(!msgTuple.isMessageSet()) {
+                toBeDecoded.add(msgTuple);
                 continue;
             }
 
-            if(fragments == fragmentNumber) {
-                AisMessage tmp = decodeMessage(_split, vdm);
-
-                if(tmp != null) {
-                    messages.add(tmp);
-                }
-            }
-            
+            messages.add(msgTuple.message);
         }
 
         if(!toBeDecoded.isEmpty()) {
@@ -75,55 +51,38 @@ class Decoder {
         return messages;
     }
 
-    public static List<AisMessage> decodeSingleMessage(List<String> splitted) {
-        List<AisMessage> messages = new ArrayList<>();
-        List<Tuple> toBeDecoded = new ArrayList<>();
+    public static Tuple decodeSingleMessage(String message) {
+        // Some messages can be in a different form:
+        // 1471629655.294269 !AIVDM,1,1,,A,13aN2h0P00P@ojTMLSkMU?wl2D2T9HW>`<,0*21
+        Character prefix = message.toCharArray()[0];
+        if(prefix == '$') {
+            prefix = '!';
+        }
+        if( prefix != '!') {
+            String[] arr = message.split(" ");
+            message = arr[1];
+        }
 
-        for(String _split : splitted) {
+        String[] splitMsg = message.split(",");
+        int fragments = Integer.parseInt(splitMsg[1]);
+        int fragmentNumber = Integer.parseInt(splitMsg[2]);
+        int fragmentId = -1;
+
+        if(fragments > 1 && !splitMsg[3].isEmpty()) {
+            fragmentId  = Integer.parseInt(splitMsg[3]);
+            return new Tuple(fragmentId, fragmentNumber, fragments, message);
+        }
+
+        if(fragments == fragmentNumber) {
             Vdm vdm = new Vdm();
+            AisMessage tmp = decodeMessage(message, vdm);
 
-            // Some messages can be in a different form:
-            // 1471629655.294269 !AIVDM,1,1,,A,13aN2h0P00P@ojTMLSkMU?wl2D2T9HW>`<,0*21
-            Character prefix = _split.toCharArray()[0];
-            if(prefix == '$') {
-                prefix = '!';
-            }
-            if( prefix != '!') {
-                String[] arr = _split.split(" ");
-                _split = arr[1];
-            }
-
-            String[] splitMsg = _split.split(",");
-            int fragments = Integer.parseInt(splitMsg[1]);
-            int fragmentNumber = Integer.parseInt(splitMsg[2]);
-            int fragmentId = -1;
-
-            if(fragments > 1 && !splitMsg[3].isEmpty()) {
-                fragmentId  = Integer.parseInt(splitMsg[3]);
-                toBeDecoded.add(new Tuple(fragmentId, fragmentNumber, fragments, _split));
-                continue;
-            }
-
-            if(fragments == fragmentNumber) {
-                AisMessage tmp = decodeMessage(_split, vdm);
-
-                if(tmp != null) {
-                    messages.add(tmp);
-                }
-            }
-            
-        }
-
-        if(!toBeDecoded.isEmpty()) {
-            List<AisMessage> pair = parseLeftovers(toBeDecoded);
-            List<AisMessage> leftovers = pair;
-
-            if(leftovers.size() > 0) {
-                messages.addAll(leftovers);
+            if(tmp != null) {
+                return new Tuple(tmp);
             }
         }
 
-        return messages;
+        return null;
     }
 
 
@@ -246,10 +205,15 @@ class Decoder {
 
 
 class Tuple {
+    public AisMessage message;
     public int id;
     public int currentFragmentNumber;
     public int amountOfFragments;
     public List<String> right;
+
+    public Tuple(AisMessage message) {
+        this.message = message;
+    }
 
     public Tuple(int id, int currentFragmentNumber, int amountOfFragments,
                 String right) {
@@ -282,6 +246,10 @@ class Tuple {
 
     public void add(String _input) {
         this.right.add(_input);
+    }
+
+    public Boolean isMessageSet() {
+        return this.message != null;
     }
 
     public Vdm parse() {
