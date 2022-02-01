@@ -51,13 +51,17 @@ fn main() {
 fn get_producer(hostname: String, port: i32) -> Option<Producer> {
     let host = format!("{}:{}", hostname, port.to_string());
     
-    let get_producer =
-    Producer::from_hosts(vec!(host.to_owned()))
+    let get_producer = Producer::from_hosts(vec!(host.to_owned()))
         .with_ack_timeout(Duration::from_secs(1))
         .with_required_acks(RequiredAcks::One)
-        .create()
-        .unwrap();
+        .create();
 
 
-    Some(get_producer)
+    match get_producer {
+        Ok(s) => { return Some(s);}
+        Err(e) => {
+            println!("{}", format!("failed to construct producer: {:?}", e.to_string()));
+            std::process::exit(-1);
+        }
+    }
 }
