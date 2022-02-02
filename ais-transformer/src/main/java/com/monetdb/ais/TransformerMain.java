@@ -1,6 +1,7 @@
 package com.monetdb.ais;
 
 import java.util.*;
+import java.io.FileWriter;
 import java.nio.file.Paths;
 
 import dk.dma.ais.message.AisMessage;
@@ -30,7 +31,10 @@ public class TransformerMain {
                 int port = portOption != null ? Integer.parseInt(portOption) : 9092;
                 double interval = intervalOption != null ? Double.parseDouble(intervalOption) : 10;
 
-                useKafka(host, port, topic, interval);
+                if(line.hasOption("output-path")) {
+                    NewFileWriter fileWriter = new NewFileWriter(line.getOptionValue("output-path"));
+                    useKafka(host, port, topic, interval, fileWriter);
+                }
             }
             else if(line.hasOption("files")) {
                 System.out.println("reading from file");
@@ -43,8 +47,9 @@ public class TransformerMain {
 
     }
 
-    public static void useKafka(String host, int port, String topic, double interval) {
+    public static<T extends IOutputWriter> void useKafka(String host, int port, String topic, double interval, T writer) {
         KafkaToMonetDB kafka = new KafkaToMonetDB(host, port, topic);
+        Parser parser = new Parser();
         
         while(true) {
             try {
@@ -65,6 +70,9 @@ public class TransformerMain {
                     }
                 }
 
+                List<List<String>> parsedMessages = parser.parse(msgs);
+                writer.Write(parsedMessages);
+
             }catch(InterruptedException e ) {
                 System.out.println("Caught exception: " + e.getLocalizedMessage());
                 System.exit(0);
@@ -80,7 +88,7 @@ public class TransformerMain {
             List<AisMessage> decoded = Decoder.decode(content);
 
             String path = Paths.get(filePath).getFileName().toString();
-            parser.writeToCsvFile(path, decoded);
+            // parser.writeToCsvFile(path, decoded);
         }
 
     }
