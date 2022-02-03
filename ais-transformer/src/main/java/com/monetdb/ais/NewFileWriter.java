@@ -6,7 +6,6 @@ import java.util.List;
 public class NewFileWriter implements IOutputWriter {
     private String path;
 
-
     private String[] fileNames = {"ais-msgs1", "ais-msgs4", "ais-msgs5", "ais-msgs9", "ais-msgs18", "ais-msgs21", "ais-msgs24" };
 
     //CSV Header for types 1,2 and 3
@@ -61,7 +60,7 @@ public class NewFileWriter implements IOutputWriter {
         }
 
         try {
-            FileWriter file = new FileWriter(this.path + "/" + fileName + ".csv");
+            FileWriter file = new FileWriter(this.path + "/" + fileName + ".csv", true);
 
             for(String s : input) {
                 file.append(s);
